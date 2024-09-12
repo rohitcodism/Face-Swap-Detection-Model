@@ -6,7 +6,7 @@ import io
 import os
 import numpy as np
 
-video_local = 'videos/samp.mp4'
+video_local = 'preprocessing/videos/samp.mp4'
 
 def load_video_local_storage(s3,bucket_name,s3_video_path):
     video_obj = io.BytesIO()
@@ -82,3 +82,12 @@ def delete_dir_folder():
         print(f"Folder {'preprocessing/dir'} and its contents deleted successfully.")
     except OSError as e:
         print(f"Error: {e}")
+def save_micro_for_single_frame_in_s3(s3,bucket_name,image_obj,video_type,folder_name,frame_obj_num,extend):
+    success, encoded_image = cv.imencode('.jpg', image_obj)
+        
+    if not success:
+        print(f"Failed to encode frame {image_obj}")
+        return
+    image_obj = io.BytesIO(encoded_image.tobytes())
+    image_key = f'Micro_Expression/{video_type}/{folder_name}/frame_{frame_obj_num}_{extend}.jpg'
+    s3.Bucket(bucket_name).upload_fileobj(image_obj, image_key)
