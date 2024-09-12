@@ -4,6 +4,8 @@ import os
 import random
 import numpy as np
 
+from s3_function import save_single_frame_in_s3,save_micro_for_single_frame_in_s3
+
 output_dir = "main_directory"       # Directory setup for parts of face
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
@@ -12,13 +14,13 @@ another_dir = "face_directory"      # Derectory setup for whole face
 if not os.path.exists(another_dir):
     os.makedirs(another_dir)
 
-video_folder = "path of dataset"
+video_folder = "preprocessing/videos/"
 
 
 detector = dlib.get_frontal_face_detector()     # Load Dlib face detector and shape predictor
     
-predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")   # Pre-trained model
-  
+predictor = dlib.shape_predictor("preprocessing/shape_predictor_68_face_landmarks.dat")   # Pre-trained model
+
 desired_size = (64, 64)     # Desired size for resizing 
 
 # Maintaining Aspect Ratio for better quality.......................
@@ -60,7 +62,7 @@ def augment_image(image):
 
 # Function to crop in high resolution, resize, and save only the resized version
     
-def crop_resize_and_save(image, landmarks, start_idx, end_idx, feature_name, video_output_dir, frame_count, i):
+def crop_resize_and_save(image, landmarks, start_idx, end_idx, feature_name, frame_count, i,s3,bucket_name,video_type,folder_name,frame_obj_num,extend):
     
     # Get the landmarks for the feature (e.g., eyes, nose, mouth)
     points = landmarks[start_idx:end_idx]
@@ -97,14 +99,15 @@ def crop_resize_and_save(image, landmarks, start_idx, end_idx, feature_name, vid
     augmented_resized_feature = augment_image(resized_feature)
     
     # Construct the filename for saving the resized image
-    resized_name = os.path.join(video_output_dir, f"frame{frame_count}face{i}{feature_name}_resized.jpg")
+    # resized_name = os.path.join(video_output_dir, f"frame{frame_count}face{i}{feature_name}_resized.jpg")
     
     # Save the resized feature image with high quality
-    cv2.imwrite(resized_name, augmented_resized_feature, [cv2.IMWRITE_JPEG_QUALITY, 100])  # Save with high quality
-    print(f"Saved {resized_name}")
+    # cv2.imwrite(resized_name, augmented_resized_feature, [cv2.IMWRITE_JPEG_QUALITY, 100])  # Save with high quality
+    # print(f"Saved {resized_name}")
+    save_micro_for_single_frame_in_s3(s3,bucket_name,resized_feature,video_type,folder_name,frame_obj_num,extend)
 
 
-def crop_and_save_full_face(image, face, video_output_dir1, frame_count, i, desired_size):
+def crop_and_save_full_face(s3,bucket_name,image, face, frame_count, i, desired_size,video_type,folder_name):
     # Extract face coordinates
     x, y, w, h = face.left(), face.top(), face.width(), face.height()
 
@@ -129,75 +132,73 @@ def crop_and_save_full_face(image, face, video_output_dir1, frame_count, i, desi
     # Resize the cropped face (check if not empty before resizing)
     if cropped_face.size != 0:
         resized_face = cv2.resize(augmented_resized_feature, desired_size, interpolation=cv2.INTER_LANCZOS4)
-
-        # Save the resized face to the face directory (another_dir)
-        name = os.path.join(video_output_dir1, f"frame{frame_count}_face{i}.jpg")
-        cv2.imwrite(name, resized_face, [cv2.IMWRITE_JPEG_QUALITY, 100])
-        print(f"Saved {name}")
-
+        save_single_frame_in_s3(s3,bucket_name,resized_face,video_type,folder_name,frame_count)
+        # Save the resized face to the s3
+        
 # Main loop to process videos
-for video_file in os.listdir(video_folder):
-    
-    if video_file.endswith(('.mp4', '.avi', '.mov')):  # Process video files with these extensions
-        video_path = os.path.join(video_folder, video_file)
-        print(f"Processing video: {video_path}")
+def frame_extract(s3,bucket_name,video_type,folder_name):
+    for video_file in os.listdir(video_folder):
         
-        video_name = os.path.splitext(video_file)[0]
-        video_output_dir = os.path.join(output_dir, video_name)
-        video_output_dir1 = os.path.join(another_dir, video_name)
-        
-        if not os.path.exists(video_output_dir):
-            os.makedirs(video_output_dir)
-        if not os.path.exists(video_output_dir1):
-            os.makedirs(video_output_dir1)
-        
-        cap = cv2.VideoCapture(video_path)
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))   # total frames in one video
-        print(total_frames);
-        if (total_frames<=700):
-            desired_frame_count = max(30, (total_frames * 20) // 100)   # required frame
-            n = max(1, total_frames // desired_frame_count)
-        elif(700<total_frames<=1400):
-            desired_frame_count = max(30, (total_frames * 15) // 100)   # required frame
-            n = max(1, total_frames // desired_frame_count)
-        else:
-            desired_frame_count = max(30, (total_frames * 10) // 100)   # required frame
-            n = max(1, total_frames // desired_frame_count)
-        frame_count = 0
+        if video_file.endswith(('.mp4', '.avi', '.mov')):  # Process video files with these extensions
+            video_path = os.path.join(video_folder, video_file)
+            print(f"Processing video: {video_path}")
+            
+            video_name = os.path.splitext(video_file)[0]
+            video_output_dir = os.path.join(output_dir, video_name)
+            video_output_dir1 = os.path.join(another_dir, video_name)
+            
+            if not os.path.exists(video_output_dir):
+                os.makedirs(video_output_dir)
+            if not os.path.exists(video_output_dir1):
+                os.makedirs(video_output_dir1)
+            
+            cap = cv2.VideoCapture(video_path)
+            fps = cap.get(cv2.CAP_PROP_FPS)
+            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))   # total frames in one video
+            print(total_frames);
+            if (total_frames<=700):
+                desired_frame_count = max(30, (total_frames * 20) // 100)   # required frame
+                n = max(1, total_frames // desired_frame_count)
+            elif(700<total_frames<=1400):
+                desired_frame_count = max(30, (total_frames * 15) // 100)   # required frame
+                n = max(1, total_frames // desired_frame_count)
+            else:
+                desired_frame_count = max(30, (total_frames * 10) // 100)   # required frame
+                n = max(1, total_frames // desired_frame_count)
+            frame_count = 0
 
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
-            
-            frame_count += 1
-            if frame_count % n != 0:
-                continue
-            
-            faces = detector(frame)
-            
-            for i, face in enumerate(faces):
-                x, y, w, h = face.left(), face.top(), face.width(), face.height()
-                # Draw a rectangle around the detected face
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-                crop_and_save_full_face(frame, face, video_output_dir1, frame_count, i, desired_size=(224, 224))
-
-                # Detect landmarks
-                shape = predictor(frame, face)
-                landmarks = [(shape.part(j).x, shape.part(j).y) for j in range(68)]
+            while True:
+                ret, frame = cap.read()
+                if not ret:
+                    break
                 
-                # Crop, resize, and save left eye, right eye, nose, and mouth
-                crop_resize_and_save(frame, landmarks, 18, 48, "left_eye", video_output_dir, frame_count, i)
-                #crop_resize_and_save(frame, landmarks, 42, 48, "right_eye", video_output_dir, frame_count, i)
-                crop_resize_and_save(frame, landmarks, 27, 36, "nose", video_output_dir, frame_count, i)
-                crop_resize_and_save(frame, landmarks, 48, 68, "mouth", video_output_dir, frame_count, i)
+                frame_count += 1
+                if frame_count % n != 0:
+                    continue
+                
+                faces = detector(frame)
+                
+                for i, face in enumerate(faces):
+                    x, y, w, h = face.left(), face.top(), face.width(), face.height()
+                    # Draw a rectangle around the detected face
+                    cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                    # crop_and_save_full_face(s3,bucket_name,frame,face,frame_count,{i},(224,224),video_type,folder_name)
+
+                    # Detect landmarks
+                    shape = predictor(frame, face)
+                    landmarks = [(shape.part(j).x, shape.part(j).y) for j in range(68)]
                     
-            # Display the frame with the face detection
-            cv2.imshow("Detected Faces", frame)
-            
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-            
-        cap.release()
-cv2.destroyAllWindows()
+                    # Crop, resize, and save left eye, right eye, nose, and mouth
+                    crop_resize_and_save(frame, landmarks, 18, 48, "left_eye", frame_count, i,s3,bucket_name,video_type,folder_name,frame_count//n,"eye")
+                    #crop_resize_and_save(frame, landmarks, 42, 48, "right_eye", video_output_dir, frame_count, i)
+                    crop_resize_and_save(frame, landmarks, 27, 36, "nose", frame_count,i,s3,bucket_name,video_type,folder_name,frame_count//n,"nose")
+                    crop_resize_and_save(frame, landmarks, 48, 68, "mouth", frame_count, i,s3,bucket_name,video_type,folder_name,frame_count//n,"mouth")
+                        
+                # # Display the frame with the face detection
+                # cv2.imshow("Detected Faces", frame)
+                
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+                
+            cap.release()
+    cv2.destroyAllWindows()
