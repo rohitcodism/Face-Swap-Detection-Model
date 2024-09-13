@@ -2,7 +2,7 @@ import cv2 as cv
 import boto3
 import io
 import os
-from s3_function import load_video_local_storage,distroy_video_from_local_storage,save_single_frame_in_s3,get_frame_folder_from_s3,delete_dir_folder
+from s3_function import load_video_local_storage,distroy_video_from_local_storage,save_single_frame_in_s3,delete_dir_folder
 from frameExtraction import frame_extract
 
 s3 = boto3.resource(
@@ -15,7 +15,7 @@ bucket_name = 'qbitfacedetection'
 
 ori_video = "original"
 
-for i in range (17,37):
+for i in range (7,37):
     load_video_local_storage(s3,bucket_name,s3_video_path=f"dataset/{ori_video}_sequences/{ori_video}_video ({i}).mp4")
 
     frame_extract(s3,bucket_name,ori_video,f"{ori_video}_micro_expresion{i}")
@@ -23,7 +23,7 @@ for i in range (17,37):
 
 ori_video = "manipulated"
 
-for i in range (39,57):
+for i in range (1,57):
     load_video_local_storage(s3,bucket_name,s3_video_path=f"dataset/{ori_video}_sequences/{ori_video}_video ({i}).mp4")
 
     frame_extract(s3,bucket_name,ori_video,f"{ori_video}_micro_expresion{i}")

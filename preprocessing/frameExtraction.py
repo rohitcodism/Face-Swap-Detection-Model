@@ -127,7 +127,7 @@ def crop_and_save_full_face(s3,bucket_name,image, face, frame_count, i, desired_
     normalized_face = augmented_resized_feature.astype("float32") / 255.0
 
     # Display the normalized face (optional)
-    cv2.imshow(f"Normalized Face {i}", normalized_face)
+    # cv2.imshow(f"Normalized Face {i}", normalized_face)
 
     # Resize the cropped face (check if not empty before resizing)
     if cropped_face.size != 0:
@@ -180,19 +180,21 @@ def frame_extract(s3,bucket_name,video_type,folder_name):
                 
                 for i, face in enumerate(faces):
                     x, y, w, h = face.left(), face.top(), face.width(), face.height()
+                    new_frame_count=10000+(frame_count//n)
                     # Draw a rectangle around the detected face
                     cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-                    # crop_and_save_full_face(s3,bucket_name,frame,face,frame_count,{i},(224,224),video_type,folder_name)
+                    crop_and_save_full_face(s3,bucket_name,frame,face,new_frame_count,{i},(224,224),video_type,folder_name)
 
                     # Detect landmarks
                     shape = predictor(frame, face)
                     landmarks = [(shape.part(j).x, shape.part(j).y) for j in range(68)]
                     
+                    
                     # Crop, resize, and save left eye, right eye, nose, and mouth
-                    crop_resize_and_save(frame, landmarks, 18, 48, "left_eye", frame_count, i,s3,bucket_name,video_type,folder_name,frame_count//n,"eye")
+                    crop_resize_and_save(frame, landmarks, 18, 48, "left_eye", frame_count, i,s3,bucket_name,video_type,folder_name,new_frame_count,"eye")
                     #crop_resize_and_save(frame, landmarks, 42, 48, "right_eye", video_output_dir, frame_count, i)
-                    crop_resize_and_save(frame, landmarks, 27, 36, "nose", frame_count,i,s3,bucket_name,video_type,folder_name,frame_count//n,"nose")
-                    crop_resize_and_save(frame, landmarks, 48, 68, "mouth", frame_count, i,s3,bucket_name,video_type,folder_name,frame_count//n,"mouth")
+                    crop_resize_and_save(frame, landmarks, 27, 36, "nose", frame_count,i,s3,bucket_name,video_type,folder_name,new_frame_count,"nose")
+                    crop_resize_and_save(frame, landmarks, 48, 68, "mouth", frame_count, i,s3,bucket_name,video_type,folder_name,new_frame_count,"mouth")
                         
                 # # Display the frame with the face detection
                 # cv2.imshow("Detected Faces", frame)
