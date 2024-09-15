@@ -183,7 +183,7 @@ def frame_extract(s3,bucket_name,video_type,folder_name):
                     new_frame_count=10000+(frame_count//n)
                     # Draw a rectangle around the detected face
                     cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-                    crop_and_save_full_face(s3,bucket_name,frame,face,new_frame_count,{i},(224,224),video_type,folder_name)
+                    # crop_and_save_full_face(s3,bucket_name,frame,face,new_frame_count,{i},(224,224),video_type,folder_name)
 
                     # Detect landmarks
                     shape = predictor(frame, face)

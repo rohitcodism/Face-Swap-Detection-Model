@@ -15,7 +15,7 @@ bucket_name = 'qbitfacedetection'
 
 ori_video = "original"
 
-for i in range (7,37):
+for i in range (1,37):
     load_video_local_storage(s3,bucket_name,s3_video_path=f"dataset/{ori_video}_sequences/{ori_video}_video ({i}).mp4")
 
     frame_extract(s3,bucket_name,ori_video,f"{ori_video}_micro_expresion{i}")
