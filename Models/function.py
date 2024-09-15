@@ -42,7 +42,6 @@ def load_4d_array_from_s3(bucket_name, region_name, aws_access_key_id, aws_secre
                 file_obj = obj.get()
                 file_content = file_obj['Body'].read()
                 img = Image.open(BytesIO(file_content))
-                np_img = np.array(img)
 
                 # Create the video name dictionary if it doesn't exist
                 if video_name not in video_data:
@@ -54,10 +53,10 @@ def load_4d_array_from_s3(bucket_name, region_name, aws_access_key_id, aws_secre
 
                 # Add the frame to the corresponding array
                 if base_folder == 'frames':
-                    video_data[video_name]['frames'].append(np_img)
+                    video_data[video_name]['frames'].append(img)
                     video_data[video_name]['frame_label'].append(label)
                 elif base_folder == 'Micro_Expression':
-                    video_data[video_name]['Micro_Expression'].append(np_img)
+                    video_data[video_name]['Micro_Expression'].append(img)
                     video_data[video_name]['Micro_Expression_label'].append(label)
                 print(f"{video_name}  {x}")
                 x = x + 1
