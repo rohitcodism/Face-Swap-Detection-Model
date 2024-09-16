@@ -25,6 +25,7 @@ desired_size = (64, 64)     # Desired size for resizing
 
 # Maintaining Aspect Ratio for better quality.......................
 
+"""
 def resize_with_aspect_ratio(image, width=None, height=None, inter=None):
     (h, w) = image.shape[:2]
     
@@ -40,7 +41,7 @@ def resize_with_aspect_ratio(image, width=None, height=None, inter=None):
 
     resized = cv2.resize(image, dim, interpolation=inter)
     return resized
-
+"""
 # Augmentation function...........................
 
 def augment_image(image):
@@ -62,41 +63,57 @@ def augment_image(image):
 
 # Function to crop in high resolution, resize, and save only the resized version
     
-def crop_resize_and_save(image, landmarks, start_idx, end_idx, feature_name, frame_count, i,s3,bucket_name,video_type,folder_name,frame_obj_num,extend):
+def crop_resize_and_save(image, landmarks, start_idx, end_idx, feature_name, frame_count, i,s3,bucket_name,video_type,folder_name,frame_obj_num,extend,desired_size):
     
     # Get the landmarks for the feature (e.g., eyes, nose, mouth)
     points = landmarks[start_idx:end_idx]
     
-    # Calculate the bounding box for the feature
     x, y, w, h = cv2.boundingRect(np.array(points))
-    
-    # Check if the bounding box is valid, otherwise adjust
+
+    # Adjust invalid bounding box dimensions
     if w <= 0 or h <= 0:
         print(f"Adjusting {feature_name} bounding box for frame {frame_count} face {i}: Invalid w={w}, h={h}")
-        
-        # Set a default width and height if bounding box is too small
-        w = max(w, 30)  # Use a reasonable minimum width
-        h = max(h, 30)  # Use a reasonable minimum height
+        w = max(w, 30)
+        h = max(h, 30)
 
-    # Ensure the bounding box stays within image bounds
     if x < 0: x = 0
     if y < 0: y = 0
     if x + w > image.shape[1]: w = image.shape[1] - x
     if y + h > image.shape[0]: h = image.shape[0] - y
 
-    # Crop the feature from the image (ensure it's within bounds)
     cropped_feature = image[y:y + h, x:x + w]
 
-    # If the crop is empty after adjusting, we can use the whole face as a fallback
+    # Handle case where cropping results in an empty image
     if cropped_feature.size == 0:
         print(f"Empty crop for {feature_name}, using whole face for frame {frame_count} face {i}")
-        cropped_feature = image  # Fallback to the whole image or face region
+        cropped_feature = image
 
-    # Resize the cropped feature to the desired size
-    resized_feature = resize_with_aspect_ratio(cropped_feature, 128, 128, inter=cv2.INTER_CUBIC)
-    
-    # Augment the resized image 
-    augmented_resized_feature = augment_image(resized_feature)
+    # Maintain aspect ratio while resizing
+    h, w = cropped_feature.shape[:2]
+    aspect_ratio = w / h
+
+    # Compute new dimensions while maintaining aspect ratio
+    if aspect_ratio > 1:  # Width is greater than height
+        new_w = desired_size[0]
+        new_h = int(new_w / aspect_ratio)
+    else:  # Height is greater than width
+        new_h = desired_size[1]
+        new_w = int(new_h * aspect_ratio)
+
+    resized_feature = cv2.resize(cropped_feature, (new_w, new_h), interpolation=cv2.INTER_CUBIC)
+
+    # Create a blank image of the desired size and center the resized feature on it
+    padded_feature = np.full((desired_size[1], desired_size[0], 3), 0, dtype=np.uint8)  # Create a white background
+
+    # Compute padding to center the image
+    x_offset = (desired_size[0] - new_w) // 2
+    y_offset = (desired_size[1] - new_h) // 2
+
+    # Paste the resized feature into the padded image
+    padded_feature[y_offset:y_offset + new_h, x_offset:x_offset + new_w] = resized_feature
+
+    # Augment the resized and padded image
+    augmented_resized_feature = augment_image(padded_feature)
     
     # Construct the filename for saving the resized image
     # resized_name = os.path.join(video_output_dir, f"frame{frame_count}face{i}{feature_name}_resized.jpg")
@@ -104,7 +121,7 @@ def crop_resize_and_save(image, landmarks, start_idx, end_idx, feature_name, fra
     # Save the resized feature image with high quality
     # cv2.imwrite(resized_name, augmented_resized_feature, [cv2.IMWRITE_JPEG_QUALITY, 100])  # Save with high quality
     # print(f"Saved {resized_name}")
-    save_micro_for_single_frame_in_s3(s3,bucket_name,resized_feature,video_type,folder_name,frame_obj_num,extend)
+    save_micro_for_single_frame_in_s3(s3,bucket_name,augmented_resized_feature,video_type,folder_name,frame_obj_num,extend)
 
 
 def crop_and_save_full_face(s3,bucket_name,image, face, frame_count, i, desired_size,video_type,folder_name):
@@ -191,10 +208,10 @@ def frame_extract(s3,bucket_name,video_type,folder_name):
                     
                     
                     # Crop, resize, and save left eye, right eye, nose, and mouth
-                    crop_resize_and_save(frame, landmarks, 18, 48, "left_eye", frame_count, i,s3,bucket_name,video_type,folder_name,new_frame_count,"eye")
+                    crop_resize_and_save(frame, landmarks, 18, 48, "left_eye", frame_count, i,s3,bucket_name,video_type,folder_name,new_frame_count,"eye",desired_size)
                     #crop_resize_and_save(frame, landmarks, 42, 48, "right_eye", video_output_dir, frame_count, i)
-                    crop_resize_and_save(frame, landmarks, 27, 36, "nose", frame_count,i,s3,bucket_name,video_type,folder_name,new_frame_count,"nose")
-                    crop_resize_and_save(frame, landmarks, 48, 68, "mouth", frame_count, i,s3,bucket_name,video_type,folder_name,new_frame_count,"mouth")
+                    crop_resize_and_save(frame, landmarks, 27, 36, "nose", frame_count,i,s3,bucket_name,video_type,folder_name,new_frame_count,"nose",desired_size)
+                    crop_resize_and_save(frame, landmarks, 48, 68, "mouth", frame_count, i,s3,bucket_name,video_type,folder_name,new_frame_count,"mouth",desired_size)
                         
                 # # Display the frame with the face detection
                 # cv2.imshow("Detected Faces", frame)
