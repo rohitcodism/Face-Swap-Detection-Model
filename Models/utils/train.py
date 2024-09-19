@@ -51,6 +51,11 @@ test_generator = tf.data.Dataset.from_generator(
 
 model_test_1 = deliver_model()
 
+model_test_1.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+
+
+print(model_test_1.summary())
+
 model_test_1.fit(
     train_generator,
     epochs=10,

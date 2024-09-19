@@ -107,7 +107,7 @@ def build_temporal_attention_mechanism(feature_maps):
     
     temporal_attention_scores = Dense(1, activation='tanh')(feature_maps)
     
-    temporal_attention_weights = Activation('softmax')(temporal_attention_scores)
+    temporal_attention_weights = Activation('sigmoid')(temporal_attention_scores)
     
     weighted_temporal_features = Multiply()([feature_maps, temporal_attention_weights])
     
@@ -141,7 +141,7 @@ def build_temporal_micro_expression_attention_mechanism(micro_exp_feature_vector
     
     attention_scores = Dense(1,activation='tanh')(micro_exp_feature_vectors)
     
-    attention_weights = Activation('softmax')(attention_scores)
+    attention_weights = Activation('sigmoid')(attention_scores)
     
     weighted_micro_exp_temporal_features = Multiply()([attention_weights, micro_exp_feature_vectors])
     
@@ -177,9 +177,9 @@ def build_face_swap_detection_model(concatenated_feature_vector):
 
     op_face_swap = Dense(1, activation='sigmoid')(x_face_swap)
 
-    face_swap_detector_model = Model(inputs=concatenated_feature_vector, outputs=op_face_swap)
+    # face_swap_detector_model = Model(inputs=concatenated_feature_vector, outputs=op_face_swap)
     
-    return face_swap_detector_model
+    return op_face_swap
 
 # Combine everything into a single model pipeline
 def build_full_model():
@@ -219,7 +219,7 @@ def build_full_model():
     face_swap_model = build_face_swap_detection_model(concatenated_feature_vector)
     
     # Build full model
-    full_model = Model(inputs=[facial_frames, micro_expression_frames], outputs=face_swap_model.output)
+    full_model = Model(inputs=[facial_frames, micro_expression_frames], outputs=face_swap_model)
     
     return full_model
 
