@@ -44,6 +44,8 @@ class VideoDataGenerator(Sequence):
         X_frames = np.array(X_frames, dtype=np.float32)
         X_micro_exp = np.array(X_micro_exp, dtype=np.float32)
         y = np.array(y, dtype=np.float32)
+
+        y = y.reshape(-1, 1) # reshape y to (batch_size, 1)
         
         return ((X_frames, X_micro_exp), y)
 

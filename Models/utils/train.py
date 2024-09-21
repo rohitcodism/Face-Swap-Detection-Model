@@ -3,6 +3,7 @@ import pickle
 from datamaker import VideoDataGenerator
 import tensorflow as tf
 from deliver import deliver_model
+from pipeline import build_full_model
 
 
 with open('Models/data/video_data_2.pkl', 'rb') as f:
@@ -29,7 +30,7 @@ output_signature = (
         tf.TensorSpec(shape=(None, 224, 224, 3), dtype=tf.float32),
         tf.TensorSpec(shape=(None, 64, 64, 3), dtype=tf.float32)
     ),
-    tf.TensorSpec(shape=(None,), dtype=tf.float32)
+    tf.TensorSpec(shape=(None,1), dtype=tf.float32)
 )
 
 train_generator = tf.data.Dataset.from_generator(
@@ -48,14 +49,19 @@ test_generator = tf.data.Dataset.from_generator(
 )
 
 
+# build pipeline
+model_test_1 = build_full_model()
 
-model_test_1 = deliver_model()
+# compile the model
+model_test_1.compile(
+    optimizer='adam',
+    loss='binary_crossentropy',
+    metrics=['accuracy']
+)
 
-model_test_1.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+# model_test_1.summary()
 
-
-print(model_test_1.summary())
-
+# train the model
 model_test_1.fit(
     train_generator,
     epochs=10,
