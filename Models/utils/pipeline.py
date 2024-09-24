@@ -1,16 +1,9 @@
 import tensorflow as tf
-import numpy as np
-from PIL import Image
-from tensorflow.keras.utils import Sequence
-from io import BytesIO
 from tensorflow.keras.applications import ResNet50
 from tensorflow.keras.layers import Input, Dense, Dropout, Concatenate, Multiply, Lambda, Activation, Conv2D, GlobalAveragePooling2D, MaxPooling2D, Flatten
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import LSTM, Bidirectional, Attention
-from keras.api.layers import BatchNormalization
-import pickle
-from sklearn.model_selection import train_test_split
-from datamaker import VideoDataGenerator
+from tensorflow.keras.layers import BatchNormalization
 
 # Define models
 def build_spatial_feature_extractor():

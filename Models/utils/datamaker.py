@@ -36,6 +36,10 @@ class VideoDataGenerator(Sequence):
             frame_np = np.array(frame)
             micro_exp_np = np.array(micro_exp)
             
+            # Normalize the frames and micro expressions by dividing by 255.0
+            frame_np = frame_np / 255.0
+            micro_exp_np = micro_exp_np / 255.0
+            
             X_frames.append(frame_np)
             X_micro_exp.append(micro_exp_np)
             y.append(video_info['frame_label'][0])  # Adjust if needed for multiple labels
@@ -45,45 +49,9 @@ class VideoDataGenerator(Sequence):
         X_micro_exp = np.array(X_micro_exp, dtype=np.float32)
         y = np.array(y, dtype=np.float32)
 
-        y = y.reshape(-1, 1) # reshape y to (batch_size, 1)
+        y = y.reshape(-1, 1)  # reshape y to (batch_size, 1)
         
         return ((X_frames, X_micro_exp), y)
 
     def on_epoch_end(self):
         np.random.shuffle(self.indexes)
-
-
-
-# import pickle
-
-# # Load the data from the pickle file
-# with open('Models/video_data_2.pkl', 'rb') as f:
-#     pickled_data = pickle.load(f)
-
-# from sklearn.model_selection import train_test_split
-
-# # Convert your video_data dictionary to a list of items for easier splitting
-# data_items = list(pickled_data.items())
-# video_names, labels = zip(*[(video_name, video_info['frame_label'][0]) for video_name, video_info in pickled_data.items()])
-
-# # Split the data
-# train_names, temp_names, train_labels, temp_labels = train_test_split(video_names, labels, test_size=0.3, random_state=42)
-# val_names, test_names, val_labels, test_labels = train_test_split(temp_names, temp_labels, test_size=0.5, random_state=42)
-
-# # Prepare dictionaries for each split
-# train_data = {name: pickled_data[name] for name in train_names}
-
-# # Define the output signature for the generator
-# output_signature = (
-#     (
-#         tf.TensorSpec(shape=(None, None, None, 3), dtype=tf.float32),
-#         tf.TensorSpec(shape=(None, None, None, 3), dtype=tf.float32)
-#     ),
-#     tf.TensorSpec(shape=(None,), dtype=tf.float32)
-# )
-
-# train_generator = tf.data.Dataset.from_generator(
-#     lambda: VideoDataGenerator(train_data),
-#     output_signature=output_signature
-# )
-

@@ -48,22 +48,27 @@ test_generator = tf.data.Dataset.from_generator(
     output_signature=output_signature
 )
 
+tf.keras.backend.clear_session()
 
 # build pipeline
 model_test_1 = build_full_model()
 
+optimizer = tf.keras.optimizers.Adam(clipvalue=1.0)
+
 # compile the model
 model_test_1.compile(
-    optimizer='adam',
+    optimizer=optimizer,
     loss='binary_crossentropy',
     metrics=['accuracy']
 )
-
 # model_test_1.summary()
 
 # train the model
-model_test_1.fit(
-    train_generator,
-    epochs=10,
-    validation_data=val_generator
-)
+try:
+    model_test_1.fit(
+        train_generator,
+        epochs=100,
+        validation_data=val_generator
+    )
+except Exception as e:
+    print(e)
