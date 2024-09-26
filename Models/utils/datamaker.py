@@ -53,5 +53,5 @@ class VideoDataGenerator(Sequence):
         
         return ((X_frames, X_micro_exp), y)
 
-    def on_epoch_end(self):
-        np.random.shuffle(self.indexes)
+    # def on_epoch_end(self):
+    #     np.random.shuffle(self.indexes)

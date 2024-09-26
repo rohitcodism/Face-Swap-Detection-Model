@@ -9,8 +9,12 @@ from tensorflow.keras.layers import BatchNormalization
 def build_spatial_feature_extractor():
     base_model = ResNet50(include_top=False, weights='imagenet', pooling='avg', input_shape=(224,224,3))
     spatial_model = Model(inputs=base_model.input, outputs=base_model.output)
-    for layer in spatial_model.layers:
-        layer.trainable = False
+    # for layer in spatial_model.layers:
+    #     layer.trainable = False
+
+    for layer in spatial_model.layers[-10:]:  # Unfreeze last 10 layers, for example
+        layer.trainable = True
+
     return spatial_model
 
 def build_temporal_feature_extractor():
@@ -68,7 +72,6 @@ def build_micro_exp_temporal_inconsistency_detector():
     x_mic_exp = Dense(128, activation='relu')(x_mic_exp)
 
     mic_exp_temp_model = Model(inputs=temp_inputs, outputs=x_mic_exp)
-    mic_exp_temp_model.compile(optimizer='adam', loss='mean_squared_error', metrics=['accuracy'])
 
     return mic_exp_temp_model
 
