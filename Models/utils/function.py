@@ -5,7 +5,7 @@ import numpy as np
 import os
 import pickle
 
-def load_and_save_data_incrementally(base_path, batch_size=100, save_path='video_data_large_2.pkl'):
+def load_and_save_data_incrementally(base_path, batch_size=100, save_path='F:/video_data_large_2.pkl'):
     main_folders = ['original_videos', 'manipulated_videos']
     data_types = ['frames', 'micro_expressions']
 
@@ -121,9 +121,9 @@ def load_4d_array_from_hdd(base_path, batch_size=100):
                             print(f"{video_name}  {x}")
                             x += 1
 
-                        # Clear memory after each batch to avoid running out of memory
-                        video_data[video_name]['frames'].clear()
-                        video_data[video_name]['Micro_Expression'].clear()
+                        # # Clear memory after each batch to avoid running out of memory
+                        # video_data[video_name]['frames'].clear()
+                        # video_data[video_name]['Micro_Expression'].clear()
 
     return video_data
 
