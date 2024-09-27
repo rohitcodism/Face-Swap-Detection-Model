@@ -4,17 +4,11 @@ from PIL import Image
 import numpy as np
 import os
 import pickle
-
-<<<<<<< HEAD
-import os
-import pickle
 import bz2
 from PIL import Image
 
-def load_and_save_data_incrementally(base_path, batch_size=100, save_path='video_data_large_2.pkl.bz2'):
-=======
+
 def load_and_save_data_incrementally(base_path, batch_size=100, save_path='F:/video_data_large_2.pkl'):
->>>>>>> bfc12d251fe48ab9f27d9a7af14ea3ecb907ccb6
     main_folders = ['original_videos', 'manipulated_videos']
     data_types = ['frames', 'micro_expressions']
 
