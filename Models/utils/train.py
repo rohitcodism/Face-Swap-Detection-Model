@@ -9,25 +9,16 @@ from sklearn.model_selection import train_test_split
 from io import BytesIO
 from PIL import Image
 import pandas as pd
+import numpy as np
 
 # Function to convert byte arrays back to PIL images
 def bytes_to_pil(byte_data):
     with BytesIO(byte_data) as buffer:
         return Image.open(buffer)
 
-<<<<<<< HEAD
-with open('Models/data/video_data_2.pkl', 'rb') as f:
+with open('Models/data/video_data_large_2.pkl', 'rb') as f:
     pickled_data = pickle.load(f)
-=======
-# Load data from pickle file
-with open('video_data_large_2.pkl', 'rb') as f:
-    loaded_data = pickle.load(f)
->>>>>>> ab308b5008cf59fd4b8df17b24fea3cb1571e9e7
 
-# Create a list to hold the restored data
-restored_data = []
-
-<<<<<<< HEAD
 
 from sklearn.model_selection import train_test_split
 
@@ -68,8 +59,6 @@ test_generator = tf.data.Dataset.from_generator(
     output_signature=output_signature
 )
 
-tf.keras.backend.clear_session()
-
 # build pipeline
 model_test_1 = build_full_model()
 
@@ -91,31 +80,12 @@ history = model_test_1.fit(
         validation_data=val_generator,
         verbose=2
     )
-=======
-# Reconstruct the DataFrame-like structure
-for video_name, video_info in loaded_data.items():
-    restored_data.append({
-        'video_name': video_name,
-        'frames': [bytes_to_pil(img_bytes) for img_bytes in video_info['frames']],
-        'frame_label': video_info['frame_label'],
-        'Micro_Expression': [bytes_to_pil(img_bytes) for img_bytes in video_info['Micro_Expression']],
-        'Micro_Expression_label': video_info['Micro_Expression_label']
-    })
->>>>>>> ab308b5008cf59fd4b8df17b24fea3cb1571e9e7
 
-# Convert to DataFrame if needed
-restored_dataframe = pd.DataFrame(restored_data)
 
-<<<<<<< HEAD
 # Evaluate the model on the test data
 test_loss, test_accuracy = model_test_1.evaluate(test_generator)
 print(f"Test Loss: {test_loss}")
 print(f"Test Accuracy: {test_accuracy}")
-=======
-print("Data loaded and restored.")
-
-print(restored_dataframe.columns)
->>>>>>> ab308b5008cf59fd4b8df17b24fea3cb1571e9e7
 
 plt.plot(history.history['loss'], label='train')
 plt.plot(history.history['val_loss'], label='test')
