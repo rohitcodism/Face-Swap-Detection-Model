@@ -10,6 +10,9 @@ from io import BytesIO
 from PIL import Image
 import pandas as pd
 import numpy as np
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.callbacks import ReduceLROnPlateau
+from tensorflow.keras.callbacks import EarlyStopping
 
 # Function to convert byte arrays back to PIL images
 def bytes_to_pil(byte_data):
@@ -62,7 +65,7 @@ test_generator = tf.data.Dataset.from_generator(
 # build pipeline
 model_test_1 = build_full_model()
 
-optimizer = tf.keras.optimizers.Adam(clipvalue=1.0)
+optimizer = Adam(learning_rate=1e-4, clipnorm=1.0)  # Clip gradients by norm
 
 # compile the model
 model_test_1.compile(
@@ -70,16 +73,31 @@ model_test_1.compile(
     loss='binary_crossentropy',
     metrics=['accuracy']
 )
-model_test_1.summary()
+# model_test_1.summary()
 
-#train the model
+early_stopping = EarlyStopping(
+    monitor='val_loss',
+    patience=10,
+    restore_best_weights=True,
+    verbose=1
+)
 
+lr_scheduler = ReduceLROnPlateau(
+    monitor='val_loss',
+    factor=0.5,
+    patience=5,
+    verbose=1,
+    min_lr=1e-6
+)
+
+# Train the model with callbacks
 history = model_test_1.fit(
-        train_generator,
-        epochs=40,
-        validation_data=val_generator,
-        verbose=2
-    )
+    train_generator,
+    epochs=50,
+    validation_data=val_generator,
+    callbacks=[early_stopping, lr_scheduler],
+    batch_size=32
+)
 
 
 # Evaluate the model on the test data

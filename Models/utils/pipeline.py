@@ -4,6 +4,7 @@ from tensorflow.keras.layers import Input, Dense, Dropout, Concatenate, Multiply
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import LSTM, Bidirectional, Attention
 from tensorflow.keras.layers import BatchNormalization
+from tensorflow.keras.regularizers import l2
 
 # Define models
 def build_spatial_feature_extractor():
@@ -91,7 +92,7 @@ def build_spatial_attention_mechanism(feature_maps):
     weighted_feature_map = Multiply()([feature_maps, attention_map])
     
     # Convert the weighted feature map into a context vector
-    spatial_context_vectors = GlobalAveragePooling2D()(expanded_tensor)
+    spatial_context_vectors = GlobalAveragePooling2D()(weighted_feature_map)
     
     return spatial_context_vectors
 
@@ -168,7 +169,7 @@ def build_face_swap_detection_model(concatenated_feature_vector):
     x_face_swap = concatenated_feature_vector
 
     for unit in dense_units:
-        x_face_swap = Dense(unit, activation='relu')(x_face_swap)
+        x_face_swap = Dense(unit, activation='relu', kernel_regularizer=l2(1e-4))(x_face_swap)
         x_face_swap = Dropout(0.5)(x_face_swap)
 
     op_face_swap = Dense(1, activation='sigmoid')(x_face_swap)
