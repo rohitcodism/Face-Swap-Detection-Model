@@ -5,7 +5,12 @@ import numpy as np
 import os
 import pickle
 
-def load_and_save_data_incrementally(base_path, batch_size=100, save_path='video_data_large_2.pkl'):
+import os
+import pickle
+import bz2
+from PIL import Image
+
+def load_and_save_data_incrementally(base_path, batch_size=100, save_path='video_data_large_2.pkl.bz2'):
     main_folders = ['original_videos', 'manipulated_videos']
     data_types = ['frames', 'micro_expressions']
 
@@ -59,8 +64,8 @@ def load_and_save_data_incrementally(base_path, batch_size=100, save_path='video
                             except Exception as e:
                                 print(f"Error loading image {frame_path}: {e}")
 
-                        # Save the current state to disk
-                        with open(save_path, 'ab') as f:
+                        # Save the current state to disk with compression
+                        with bz2.BZ2File(save_path, 'ab') as f:
                             pickle.dump({video_name: video_data[video_name]}, f)
 
                         # Clear the frames to free memory

@@ -16,7 +16,7 @@ print(type(pickled_data))  # Check the type of the data
 print(pickled_data)        # Check the contents of the data
 
 
-# from sklearn.model_selection import train_test_split
+# from sklearn.model_selection import trçain_test_split
 
 # # Convert your video_data dictionary to a list of items for easier splitting
 # data_items = list(pickled_data.items())
