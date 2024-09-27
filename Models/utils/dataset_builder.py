@@ -1,14 +1,11 @@
-from function import load_4d_array_from_hdd
+from function import load_4d_array_from_hdd, load_and_save_data_incrementally
 import pickle
 
 def save_data(data, filename):
     with open(filename, 'wb') as f:
         pickle.dump(data, f)
 
-video_data = load_4d_array_from_hdd("/Users/piyush/Desktop/Data")
-
-# After processing each batch, save it to disk
-save_data(video_data, f"video_data_large.pkl")
+load_and_save_data_incrementally("/Users/piyush/Desktop/Data")
 
 
 print("Okay!! Done")

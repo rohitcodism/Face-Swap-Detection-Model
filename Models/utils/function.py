@@ -69,9 +69,6 @@ def load_and_save_data_incrementally(base_path, batch_size=100, save_path='video
 
     print("Data loading and saving completed.")
 
-# Usage
-load_and_save_data_incrementally("path_to_videos")
-
 
 def load_4d_array_from_hdd(base_path, batch_size=100):
     main_folders = ['original_videos', 'manipulated_videos']
