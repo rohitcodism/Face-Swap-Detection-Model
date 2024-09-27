@@ -4,17 +4,12 @@ from PIL import Image
 import numpy as np
 import os
 import pickle
-
-<<<<<<< HEAD
-import os
-import pickle
 import bz2
 from PIL import Image
+import numpy as np
+import gzip
 
-def load_and_save_data_incrementally(base_path, batch_size=100, save_path='video_data_large_2.pkl.bz2'):
-=======
-def load_and_save_data_incrementally(base_path, batch_size=100, save_path='F:/video_data_large_2.pkl'):
->>>>>>> bfc12d251fe48ab9f27d9a7af14ea3ecb907ccb6
+def load_and_save_data_incrementally(base_path, batch_size=100, save_path='video_data_large_2.pkl.gz'):
     main_folders = ['original_videos', 'manipulated_videos']
     data_types = ['frames', 'micro_expressions']
 
@@ -68,24 +63,31 @@ def load_and_save_data_incrementally(base_path, batch_size=100, save_path='F:/vi
                             except Exception as e:
                                 print(f"Error loading image {frame_path}: {e}")
 
-                        # Save the current state to disk with compression
-                        with bz2.BZ2File(save_path, 'ab') as f:
+                        # Save the current state to disk using GZIP compression
+                        with gzip.open(save_path, 'ab') as f:
                             pickle.dump({video_name: video_data[video_name]}, f)
 
-                        # Clear the frames to free memory
-                        video_data[video_name]['frames'].clear()
-                        video_data[video_name]['Micro_Expression'].clear()
+                        # # Clear the frames to free memory
+                        # video_data[video_name]['frames'].clear()
+                        # video_data[video_name]['Micro_Expression'].clear()
 
     print("Data loading and saving completed.")
 
 
-def load_4d_array_from_hdd(base_path, batch_size=100):
+# Function to convert PIL images to byte arrays
+def pil_to_bytes(pil_img):
+    with BytesIO() as buffer:
+        pil_img.save(buffer, format='JPEG')
+        return buffer.getvalue()
+
+# Function to load images from disk, convert them to byte arrays, and save them to a pickle file
+def load_and_save_data(base_path, save_path='video_data_large_2.pkl'):
     main_folders = ['original_videos', 'manipulated_videos']
     data_types = ['frames', 'micro_expressions']
 
-    # Initialize video data structure (if needed to collect some specific data)
+    # Initialize video data structure
     video_data = {}
-    x = 1
+    x = 1  # Counter for logging
 
     for main_folder in main_folders:
         label = 0 if main_folder == 'original_videos' else 1
@@ -100,6 +102,7 @@ def load_4d_array_from_hdd(base_path, batch_size=100):
                 if os.path.isdir(video_folder_path):
                     video_name = video_folder
 
+                    # Initialize video entry
                     if video_name not in video_data:
                         video_data[video_name] = {
                             'frames': [],
@@ -110,31 +113,29 @@ def load_4d_array_from_hdd(base_path, batch_size=100):
 
                     frame_files = os.listdir(video_folder_path)
 
-                    # Process files in batches to avoid memory overload
-                    for i in range(0, len(frame_files), batch_size):
-                        batch_files = frame_files[i:i + batch_size]
+                    # Process all files without batching
+                    for frame_file in frame_files:
+                        frame_path = os.path.join(video_folder_path, frame_file)
 
-                        for frame_file in batch_files:
-                            frame_path = os.path.join(video_folder_path, frame_file)
-
-                            # Use a context manager to open and process the image, then immediately close it
-                            with Image.open(frame_path) as img:
-                                if data_type == 'frames':
-                                    # Store only essential data
-                                    video_data[video_name]['frames'].append(img.copy())
-                                    video_data[video_name]['frame_label'].append(label)
-                                elif data_type == 'micro_expressions':
-                                    video_data[video_name]['Micro_Expression'].append(img.copy())
-                                    video_data[video_name]['Micro_Expression_label'].append(label)
+                        # Use a context manager to open and process the image
+                        with Image.open(frame_path) as img:
+                            if data_type == 'frames':
+                                # Convert the image to a byte array (JPEG) before appending
+                                video_data[video_name]['frames'].append(pil_to_bytes(img))
+                                video_data[video_name]['frame_label'].append(label)
+                            elif data_type == 'micro_expressions':
+                                # Convert the image to a byte array (JPEG) before appending
+                                video_data[video_name]['Micro_Expression'].append(pil_to_bytes(img))
+                                video_data[video_name]['Micro_Expression_label'].append(label)
 
                             print(f"{video_name}  {x}")
                             x += 1
 
-                        # # Clear memory after each batch to avoid running out of memory
-                        # video_data[video_name]['frames'].clear()
-                        # video_data[video_name]['Micro_Expression'].clear()
+    # Save the entire dataset at once to a pickle file
+    with open(save_path, 'wb') as f:
+        pickle.dump(video_data, f)
 
-    return video_data
+    print("Data loading and saving completed.")
 
 
 

@@ -5,18 +5,39 @@ import tensorflow as tf
 from deliver import deliver_model
 from pipeline import build_full_model
 import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from io import BytesIO
+from PIL import Image
+import pandas as pd
 
+# Function to convert byte arrays back to PIL images
+def bytes_to_pil(byte_data):
+    with BytesIO(byte_data) as buffer:
+        return Image.open(buffer)
 
-with open('Models/data/video_data_large.pkl', 'rb') as f:
-    pickled_data = pickle.load(f)
+# Load data from pickle file
+with open('video_data_large_2.pkl', 'rb') as f:
+    loaded_data = pickle.load(f)
 
+# Create a list to hold the restored data
+restored_data = []
 
-# Inspect the data
-print(type(pickled_data))  # Check the type of the data
-print(pickled_data)        # Check the contents of the data
+# Reconstruct the DataFrame-like structure
+for video_name, video_info in loaded_data.items():
+    restored_data.append({
+        'video_name': video_name,
+        'frames': [bytes_to_pil(img_bytes) for img_bytes in video_info['frames']],
+        'frame_label': video_info['frame_label'],
+        'Micro_Expression': [bytes_to_pil(img_bytes) for img_bytes in video_info['Micro_Expression']],
+        'Micro_Expression_label': video_info['Micro_Expression_label']
+    })
 
+# Convert to DataFrame if needed
+restored_dataframe = pd.DataFrame(restored_data)
 
-# from sklearn.model_selection import trçain_test_split
+print("Data loaded and restored.")
+
+print(restored_dataframe.columns)
 
 # # Convert your video_data dictionary to a list of items for easier splitting
 # data_items = list(pickled_data.items())
