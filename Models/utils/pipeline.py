@@ -1,23 +1,20 @@
 import tensorflow as tf
-import numpy as np
-from PIL import Image
-from tensorflow.keras.utils import Sequence
-from io import BytesIO
 from tensorflow.keras.applications import ResNet50
 from tensorflow.keras.layers import Input, Dense, Dropout, Concatenate, Multiply, Lambda, Activation, Conv2D, GlobalAveragePooling2D, MaxPooling2D, Flatten
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import LSTM, Bidirectional, Attention
-from keras.api.layers import BatchNormalization
-import pickle
-from sklearn.model_selection import train_test_split
-from datamaker import VideoDataGenerator
+from tensorflow.keras.layers import BatchNormalization
 
 # Define models
 def build_spatial_feature_extractor():
     base_model = ResNet50(include_top=False, weights='imagenet', pooling='avg', input_shape=(224,224,3))
     spatial_model = Model(inputs=base_model.input, outputs=base_model.output)
-    for layer in spatial_model.layers:
-        layer.trainable = False
+    # for layer in spatial_model.layers:
+    #     layer.trainable = False
+
+    for layer in spatial_model.layers[-10:]:  # Unfreeze last 10 layers, for example
+        layer.trainable = True
+
     return spatial_model
 
 def build_temporal_feature_extractor():
@@ -75,7 +72,6 @@ def build_micro_exp_temporal_inconsistency_detector():
     x_mic_exp = Dense(128, activation='relu')(x_mic_exp)
 
     mic_exp_temp_model = Model(inputs=temp_inputs, outputs=x_mic_exp)
-    mic_exp_temp_model.compile(optimizer='adam', loss='mean_squared_error', metrics=['accuracy'])
 
     return mic_exp_temp_model
 

@@ -3,6 +3,8 @@ import pickle
 from datamaker import VideoDataGenerator
 import tensorflow as tf
 from deliver import deliver_model
+from pipeline import build_full_model
+import matplotlib.pyplot as plt
 
 
 with open('Models/data/video_data_2.pkl', 'rb') as f:
@@ -15,7 +17,7 @@ data_items = list(pickled_data.items())
 video_names, labels = zip(*[(video_name, video_info['frame_label'][0]) for video_name, video_info in pickled_data.items()])
 
 # Split the data
-train_names, temp_names, train_labels, temp_labels = train_test_split(video_names, labels, test_size=0.3, random_state=42)
+train_names, temp_names, train_labels, temp_labels = train_test_split(video_names, labels, test_size=0.2, random_state=42)
 val_names, test_names, val_labels, test_labels = train_test_split(temp_names, temp_labels, test_size=0.5, random_state=42)
 
 # Prepare dictionaries for each split
@@ -29,7 +31,7 @@ output_signature = (
         tf.TensorSpec(shape=(None, 224, 224, 3), dtype=tf.float32),
         tf.TensorSpec(shape=(None, 64, 64, 3), dtype=tf.float32)
     ),
-    tf.TensorSpec(shape=(None,), dtype=tf.float32)
+    tf.TensorSpec(shape=(None,1), dtype=tf.float32)
 )
 
 train_generator = tf.data.Dataset.from_generator(
@@ -47,17 +49,37 @@ test_generator = tf.data.Dataset.from_generator(
     output_signature=output_signature
 )
 
+tf.keras.backend.clear_session()
 
+# build pipeline
+model_test_1 = build_full_model()
 
-model_test_1 = deliver_model()
+optimizer = tf.keras.optimizers.Adam(clipvalue=1.0)
 
-model_test_1.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-
-
-print(model_test_1.summary())
-
-model_test_1.fit(
-    train_generator,
-    epochs=10,
-    validation_data=val_generator
+# compile the model
+model_test_1.compile(
+    optimizer=optimizer,
+    loss='binary_crossentropy',
+    metrics=['accuracy']
 )
+# model_test_1.summary()
+
+#train the model
+
+history = model_test_1.fit(
+        train_generator,
+        epochs=35,
+        validation_data=val_generator,
+        verbose=2
+    )
+
+
+# Evaluate the model on the test data
+test_loss, test_accuracy = model_test_1.evaluate(test_generator)
+print(f"Test Loss: {test_loss}")
+print(f"Test Accuracy: {test_accuracy}")
+
+plt.plot(history.history['loss'], label='train')
+plt.plot(history.history['val_loss'], label='test')
+plt.legend()
+plt.show()
