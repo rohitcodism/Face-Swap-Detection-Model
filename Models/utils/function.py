@@ -5,36 +5,33 @@ import numpy as np
 import os
 
 
-def load_4d_array_from_hdd(base_path):
-    # Define the main categories (original and manipulated)
+import os
+from PIL import Image
+
+import os
+from PIL import Image
+
+def load_4d_array_from_hdd(base_path, batch_size=100):
     main_folders = ['original_videos', 'manipulated_videos']
     data_types = ['frames', 'micro_expressions']
 
-    # Initialize the 4D array
+    # Initialize video data structure (if needed to collect some specific data)
     video_data = {}
     x = 1
 
-    # Loop through the main folders (original and manipulated)
     for main_folder in main_folders:
-        # Determine the label (0 for original, 1 for manipulated)
         label = 0 if main_folder == 'original_videos' else 1
-
-        # Construct the path for the current main folder
         folder_path = os.path.join(base_path, main_folder)
 
-        # Iterate through frames and micro_expressions folders
         for data_type in data_types:
             data_type_path = os.path.join(folder_path, data_type)
 
-            # Loop through each video folder within frames or micro_expressions
             for video_folder in os.listdir(data_type_path):
                 video_folder_path = os.path.join(data_type_path, video_folder)
 
-                # Ensure it's a directory
                 if os.path.isdir(video_folder_path):
-                    video_name = video_folder  # Use the folder name as the video name
+                    video_name = video_folder
 
-                    # Initialize the video dictionary if it doesn't exist
                     if video_name not in video_data:
                         video_data[video_name] = {
                             'frames': [],
@@ -43,23 +40,31 @@ def load_4d_array_from_hdd(base_path):
                             'Micro_Expression_label': []
                         }
 
-                    # Iterate through the frames or micro-expression images
-                    for frame_file in os.listdir(video_folder_path):
-                        frame_path = os.path.join(video_folder_path, frame_file)
+                    frame_files = os.listdir(video_folder_path)
 
-                        # Load the frame image
-                        img = Image.open(frame_path)
+                    # Process files in batches to avoid memory overload
+                    for i in range(0, len(frame_files), batch_size):
+                        batch_files = frame_files[i:i + batch_size]
 
-                        # Add the frame to the corresponding array
-                        if data_type == 'frames':
-                            video_data[video_name]['frames'].append(img)
-                            video_data[video_name]['frame_label'].append(label)
-                        elif data_type == 'micro_expressions':
-                            video_data[video_name]['Micro_Expression'].append(img)
-                            video_data[video_name]['Micro_Expression_label'].append(label)
+                        for frame_file in batch_files:
+                            frame_path = os.path.join(video_folder_path, frame_file)
 
-                        print(f"{video_name}  {x}")
-                        x = x + 1
+                            # Use a context manager to open and process the image, then immediately close it
+                            with Image.open(frame_path) as img:
+                                if data_type == 'frames':
+                                    # Store only essential data
+                                    video_data[video_name]['frames'].append(img.copy())
+                                    video_data[video_name]['frame_label'].append(label)
+                                elif data_type == 'micro_expressions':
+                                    video_data[video_name]['Micro_Expression'].append(img.copy())
+                                    video_data[video_name]['Micro_Expression_label'].append(label)
+
+                            print(f"{video_name}  {x}")
+                            x += 1
+
+                        # Clear memory after each batch to avoid running out of memory
+                        video_data[video_name]['frames'].clear()
+                        video_data[video_name]['Micro_Expression'].clear()
 
     return video_data
 

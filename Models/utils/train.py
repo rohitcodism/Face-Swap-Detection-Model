@@ -7,7 +7,7 @@ from pipeline import build_full_model
 import matplotlib.pyplot as plt
 
 
-with open('Models/data/video_data_2.pkl', 'rb') as f:
+with open('Models/data/video_data_large.pkl', 'rb') as f:
     pickled_data = pickle.load(f)
 
 from sklearn.model_selection import train_test_split
@@ -62,7 +62,7 @@ model_test_1.compile(
     loss='binary_crossentropy',
     metrics=['accuracy']
 )
-# model_test_1.summary()
+model_test_1.summary()
 
 #train the model
 
