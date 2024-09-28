@@ -1,9 +1,9 @@
 # Load the data from the pickle file
 import pickle
-from datamaker import VideoDataGenerator
+from datamaker2 import VideoDataGenerator
 import tensorflow as tf
 from deliver import deliver_model
-from pipeline import build_full_model
+from pipeline2 import modified_build_full_model
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from io import BytesIO
@@ -63,7 +63,7 @@ test_generator = tf.data.Dataset.from_generator(
 )
 
 # build pipeline
-model_test_1 = build_full_model()
+model_test_1 = modified_build_full_model()
 
 optimizer = Adam(learning_rate=1e-4, clipnorm=1.0)  # Clip gradients by norm
 

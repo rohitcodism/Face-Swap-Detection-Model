@@ -37,8 +37,8 @@ class VideoDataGenerator(Sequence):
             micro_exp_np = np.array(micro_exp)
             
             # Normalize the frames and micro expressions by dividing by 255.0
-            frame_np = frame_np / 255.0
-            micro_exp_np = micro_exp_np / 255.0
+            # frame_np = frame_np / 255.0
+            # micro_exp_np = micro_exp_np / 255.0
             
             X_frames.append(frame_np)
             X_micro_exp.append(micro_exp_np)
@@ -55,3 +55,4 @@ class VideoDataGenerator(Sequence):
 
     # def on_epoch_end(self):
     #     np.random.shuffle(self.indexes)
+
