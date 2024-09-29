@@ -1,20 +1,27 @@
 import tensorflow as tf
-import numpy as np
-from PIL import Image
 from tensorflow.keras.utils import Sequence
+from PIL import Image
+import numpy as np
 from io import BytesIO
 
 class VideoDataGenerator(Sequence):
-    def __init__(self, data, batch_size=32, sequence_length=30, img_height=224, img_width=224, micro_exp_height=64, micro_exp_width=64):
+    def __init__(
+        self, data, batch_size=32, sequence_length=30, 
+        img_height=224, img_width=224, micro_exp_height=64, micro_exp_width=64, 
+        shuffle=True, augment=False
+    ):
         self.data = data
         self.batch_size = batch_size
-        self.sequence_length = sequence_length  # New parameter for sequence length
+        self.sequence_length = sequence_length  # Number of frames per sequence
         self.img_height = img_height
         self.img_width = img_width
         self.micro_exp_height = micro_exp_height
         self.micro_exp_width = micro_exp_width
+        self.shuffle = shuffle
+        self.augment = augment
         self.video_names = list(data.keys())
         self.indexes = np.arange(len(self.video_names))
+        self.on_epoch_end()
 
     def __len__(self):
         return int(np.ceil(len(self.video_names) / self.batch_size))
@@ -32,13 +39,17 @@ class VideoDataGenerator(Sequence):
             frames_seq = []
             micro_exp_seq = []
             
+            # Ensure the video has enough frames
+            if len(video_info['frames']) < self.sequence_length or len(video_info['Micro_Expression']) < self.sequence_length:
+                continue  # Skip or handle padding if necessary
+            
             # Load the sequence of frames and micro-expressions
             for i in range(self.sequence_length):
-                frame = Image.open(BytesIO(video_info['frames'][i])).resize((self.img_width, self.img_height))
-                micro_exp = Image.open(BytesIO(video_info['Micro_Expression'][i])).resize((self.micro_exp_width, self.micro_exp_height))
+                frame = Image.open(BytesIO(video_info['frames'][i])).convert('RGB').resize((self.img_width, self.img_height))
+                micro_exp = Image.open(BytesIO(video_info['Micro_Expression'][i])).convert('RGB').resize((self.micro_exp_width, self.micro_exp_height))
                 
-                frame_np = np.array(frame)
-                micro_exp_np = np.array(micro_exp)
+                frame_np = np.array(frame) / 255.0  # Normalize frame
+                micro_exp_np = np.array(micro_exp) / 255.0  # Normalize micro-expression
                 
                 frames_seq.append(frame_np)
                 micro_exp_seq.append(micro_exp_np)
@@ -55,4 +66,5 @@ class VideoDataGenerator(Sequence):
         return ((X_frames, X_micro_exp), y)
 
     # def on_epoch_end(self):
-    #     np.random.shuffle(self.indexes)
+    #     if self.shuffle:
+    #         np.random.shuffle(self.indexes)
