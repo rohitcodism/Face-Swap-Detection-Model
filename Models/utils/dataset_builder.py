@@ -27,7 +27,7 @@ import pandas as pd
 #     with open(filename, 'wb') as f:
 #         pickle.dump(data, f)
 
-load_and_save_data("/Users/piyush/Desktop/Data")
+load_and_save_data("G:/Preprocessed Data")
 
 # save_data(video_data, "/Volumes/E/video_data_large_2.pkl")
 

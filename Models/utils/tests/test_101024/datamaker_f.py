@@ -5,7 +5,7 @@ from tensorflow.keras.utils import Sequence
 from io import BytesIO
 
 class VideoDataGenerator(Sequence):
-    def _init_(self, data, batch_size=32, img_height=224, img_width=224, micro_exp_height=64, micro_exp_width=64):
+    def __init__(self, data, batch_size=32, img_height=224, img_width=224, micro_exp_height=64, micro_exp_width=64):
         self.data = data
         self.batch_size = batch_size
         self.img_height = img_height
@@ -15,10 +15,10 @@ class VideoDataGenerator(Sequence):
         self.video_names = list(data.keys())
         self.indexes = np.arange(len(self.video_names))
 
-    def _len_(self):
+    def __len__(self):
         return int(np.ceil(len(self.video_names) / self.batch_size))
 
-    def _getitem_(self, index):
+    def __getitem__(self, index):
         indexes = self.indexes[index * self.batch_size:(index + 1) * self.batch_size]
         batch_video_names = [self.video_names[i] for i in indexes]
         X_frames = []
@@ -28,6 +28,11 @@ class VideoDataGenerator(Sequence):
         for video_name in batch_video_names:
             video_info = self.data[video_name]
             
+            # Check if frames and micro expressions lists are not empty
+            if not video_info['frames'] or not video_info['Micro_Expression']:
+                print(f"Skipping {video_name} due to empty frames or micro expressions.")
+                continue
+            
             # Load the first frame and micro expression as images
             frame = Image.open(BytesIO(video_info['frames'][0])).resize((self.img_width, self.img_height))
             micro_exp = Image.open(BytesIO(video_info['Micro_Expression'][0])).resize((self.micro_exp_width, self.micro_exp_height))
@@ -36,13 +41,13 @@ class VideoDataGenerator(Sequence):
             frame_np = np.array(frame)
             micro_exp_np = np.array(micro_exp)
             
-            #Normalize the frames and micro expressions by dividing by 255.0
-            frame_np = frame_np / 255.0
-            micro_exp_np = micro_exp_np / 255.0
+            # # Normalize the frames and micro expressions by dividing by 255.0
+            # frame_np = frame_np / 255.0
+            # micro_exp_np = micro_exp_np / 255.0
             
             X_frames.append(frame_np)
             X_micro_exp.append(micro_exp_np)
-            y.append(video_info['frame_label'][0])  # Adjust if needed for multiple labels
+            y.append(video_info['frames_label'][0])  # Adjust if needed for multiple labels
         
         # Convert to numpy arrays (ensure correct dtype)
         X_frames = np.array(X_frames, dtype=np.float32)

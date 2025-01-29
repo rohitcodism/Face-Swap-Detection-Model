@@ -8,13 +8,9 @@ import bz2
 from PIL import Image
 import numpy as np
 import gzip
+from tqdm import tqdm
 
-<<<<<<< HEAD
-
-def load_and_save_data_incrementally(base_path, batch_size=100, save_path='F:/video_data_large_2.pkl'):
-=======
-def load_and_save_data_incrementally(base_path, batch_size=100, save_path='video_data_large_2.pkl.gz'):
->>>>>>> ab308b5008cf59fd4b8df17b24fea3cb1571e9e7
+def load_and_save_data_incrementally(base_path, batch_size=100, save_path='video_data_scaled.pkl'):
     main_folders = ['original_videos', 'manipulated_videos']
     data_types = ['frames', 'micro_expressions']
 
@@ -85,22 +81,34 @@ def pil_to_bytes(pil_img):
         pil_img.save(buffer, format='JPEG')
         return buffer.getvalue()
 
-# Function to load images from disk, convert them to byte arrays, and save them to a pickle file
-def load_and_save_data(base_path, save_path='video_data_large_2.pkl'):
-    main_folders = ['original_videos', 'manipulated_videos']
-    data_types = ['frames', 'micro_expressions']
+import os
+from PIL import Image
+import pickle
+
+# Function for loading and saving data
+import os
+from PIL import Image
+import pickle
+from tqdm import tqdm  # Import tqdm for progress bar
+
+def load_and_save_data(base_path, save_path='video_data_scaled.pkl'):
+    main_folders = ['original_preprocessed', 'manipulated_preprocessed']
+    data_types = ['facial_frames', 'micro_expression_frames']
 
     # Initialize video data structure
     video_data = {}
     x = 1  # Counter for logging
 
-    for main_folder in main_folders:
-        label = 0 if main_folder == 'original_videos' else 1
+    # Add progress bar for main folders
+    for main_folder in tqdm(main_folders, desc="Main Folders"):  
+        label = 0 if main_folder == 'original_preprocessed' else 1
         folder_path = os.path.join(base_path, main_folder)
 
-        for data_type in data_types:
+        # Add progress bar for data types (facial frames, micro expression frames)
+        for data_type in tqdm(data_types, desc=f"{main_folder} - Data Types", leave=False):  
             data_type_path = os.path.join(folder_path, data_type)
 
+            # No progress bar for video folders, just process normally
             for video_folder in os.listdir(data_type_path):
                 video_folder_path = os.path.join(data_type_path, video_folder)
 
@@ -122,25 +130,31 @@ def load_and_save_data(base_path, save_path='video_data_large_2.pkl'):
                     for frame_file in frame_files:
                         frame_path = os.path.join(video_folder_path, frame_file)
 
-                        # Use a context manager to open and process the image
-                        with Image.open(frame_path) as img:
-                            if data_type == 'frames':
-                                # Convert the image to a byte array (JPEG) before appending
-                                video_data[video_name]['frames'].append(pil_to_bytes(img))
-                                video_data[video_name]['frame_label'].append(label)
-                            elif data_type == 'micro_expressions':
-                                # Convert the image to a byte array (JPEG) before appending
-                                video_data[video_name]['Micro_Expression'].append(pil_to_bytes(img))
-                                video_data[video_name]['Micro_Expression_label'].append(label)
+                        try:
+                            # Use a context manager to open and process the image
+                            with Image.open(frame_path) as img:
+                                if data_type == 'facial_frames':
+                                    # Convert the image to a byte array (JPEG) before appending
+                                    video_data[video_name]['frames'].append(pil_to_bytes(img))
+                                    video_data[video_name]['frame_label'].append(label)
+                                elif data_type == 'micro_expression_frames':
+                                    # Convert the image to a byte array (JPEG) before appending
+                                    video_data[video_name]['Micro_Expression'].append(pil_to_bytes(img))
+                                    video_data[video_name]['Micro_Expression_label'].append(label)
 
-                            print(f"{video_name}  {x}")
-                            x += 1
+                                print(f"{video_name}  {x}")
+                                x += 1
+                        except Exception as e:
+                            # Skip the file and log the issue
+                            print(f"Skipping file due to error: {frame_file}, Error: {e}")
+                            continue
 
     # Save the entire dataset at once to a pickle file
     with open(save_path, 'wb') as f:
         pickle.dump(video_data, f)
 
     print("Data loading and saving completed.")
+
 
 
 
@@ -215,3 +229,75 @@ def load_dataset():
 
     # Now video_data contains all the images organized in a 4D array
     return video_data
+
+def load_and_save_data2(base_path, save_path='video_data_scaled_2.pkl'):
+    main_folders = ['original_preprocessed', 'manipulated_preprocessed']
+    data_types = ['facial_frames', 'micro_expression_frames']
+
+    # Initialize video data structure
+    video_data = {}
+    total_files = 0
+
+    # Count total number of files for the progress bar
+    for main_folder in main_folders:
+        folder_path = os.path.join(base_path, main_folder)
+
+        for data_type in data_types:
+            data_type_path = os.path.join(folder_path, data_type)
+            for video_folder in os.listdir(data_type_path):
+                video_folder_path = os.path.join(data_type_path, video_folder)
+                if os.path.isdir(video_folder_path):
+                    total_files += len(os.listdir(video_folder_path))
+
+    # Initialize progress bar
+    pbar = tqdm(total=total_files, desc="Processing videos", unit="files")
+
+    for main_folder in main_folders:
+        label = 0 if main_folder == 'original_preprocessed' else 1
+        folder_path = os.path.join(base_path, main_folder)
+
+        for data_type in data_types:
+            data_type_path = os.path.join(folder_path, data_type)
+
+            for video_folder in os.listdir(data_type_path):
+                video_folder_path = os.path.join(data_type_path, video_folder)
+
+                if os.path.isdir(video_folder_path):
+                    video_name = video_folder
+
+                    # Initialize video entry
+                    if video_name not in video_data:
+                        video_data[video_name] = {
+                            'frames': [],
+                            'frame_label': [],
+                            'Micro_Expression': [],
+                            'Micro_Expression_label': []
+                        }
+
+                    frame_files = os.listdir(video_folder_path)
+
+                    # Process all files without batching
+                    for frame_file in frame_files:
+                        frame_path = os.path.join(video_folder_path, frame_file)
+
+                        # Use a context manager to open and process the image
+                        with Image.open(frame_path) as img:
+                            if data_type == 'facial_frames':
+                                # Convert the image to a byte array (JPEG) before appending
+                                video_data[video_name]['frames'].append(pil_to_bytes(img))
+                                video_data[video_name]['frame_label'].append(label)
+                            elif data_type == 'micro_expression_frames':
+                                # Convert the image to a byte array (JPEG) before appending
+                                video_data[video_name]['Micro_Expression'].append(pil_to_bytes(img))
+                                video_data[video_name]['Micro_Expression_label'].append(label)
+
+                        # Update progress bar
+                        pbar.update(1)
+
+    pbar.close()  # Close the progress bar when done
+
+    # Save the entire dataset at once to a pickle file
+    with open(save_path, 'wb') as f:
+        pickle.dump(video_data, f)
+
+    print("Data loading and saving completed.")
