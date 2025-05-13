@@ -11,12 +11,6 @@
     - [Temporal Feature Extraction](#temporal-feature-extraction)
     - [Micro-Expression Analysis](#micro-expression-analysis)
     - [Feature Fusion Layer](#feature-fusion-layer)
-7. [Installation](#installation)
-8. [Usage](#usage)
-9. [Results](#results)
-10. [Contributing](#contributing)
-11. [License](#license)
-12. [Contact](#contact)
 
 ## Project Overview
 
@@ -74,46 +68,3 @@ The system is trained and tested using the **FaceForensics++** dataset, which co
 
 - **Purpose**: Integrate spatial, temporal, and micro-expression features to form a comprehensive feature set.
 - **Implementation**: Features from different modules are concatenated and processed through dense layers with attention mechanisms for final classification.
-
-## Installation
-
-To set up the project, follow these steps:
-
-1. **Clone the repository**:
-    ```bash
-    git clone https://github.com/your-username/deepfake-detection-system.git
-    cd deepfake-detection-system
-    ```
-
-2. **Install the required libraries**:
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-3. **Download the FaceForensics++ dataset** and place it in the `data/` directory.
-
-## Results
-
-The Integrated Deepfake Detection System has shown promising results in detecting deepfake videos with high accuracy. The system's ability to analyze spatial, temporal, and micro-expression features enables it to outperform traditional detection methods. Detailed results, including precision, recall, and F1-score, can be found in the `results/` directory.
-
-## Contributing
-
-Contributions are welcome! If you have any suggestions or improvements, please fork the repository and submit a pull request. For major changes, please open an issue first to discuss what you would like to change.
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License. See the `LICENSE` file for more information.
-
-## Contact
-
-- **Name**: Your Name
-- **Email**: your.email@example.com
-- **Project Link**: [https://github.com/your-username/deepfake-detection-system](https://github.com/your-username/deepfake-detection-system)
-
-Feel free to reach out if you have any questions or suggestions!
