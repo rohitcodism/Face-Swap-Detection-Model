@@ -10,8 +10,8 @@ def pil_to_bytes(pil_img):
         return buffer.getvalue()
 
 
-def load_and_save_data(base_path, save_path='D:/Projects/Face-Swap-Detection-Model/video_data_fs_16K.pkl'):
-    main_folders = ['og', 'f2f']
+def load_and_save_data(base_path, save_path='D:/Projects/Face-Swap-Detection-Model/video_data_fs_lq_16K.pkl'):
+    main_folders = ['og_lq', 'fs_lq_2']
     data_types = ['facial', 'micro_expression']
 
     # Initialize video data structure
@@ -19,7 +19,7 @@ def load_and_save_data(base_path, save_path='D:/Projects/Face-Swap-Detection-Mod
 
     # Add progress bar for main folders
     for main_folder in tqdm(main_folders, desc="Processing Main Folders", mininterval=0.5):  
-        label = 0 if main_folder == 'og' else 1
+        label = 0 if main_folder == 'og_lq' else 1
         folder_path = os.path.join(base_path, main_folder)
 
         # Add progress bar for data types (facial frames, micro expression frames)

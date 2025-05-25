@@ -65,8 +65,8 @@ def apply_advanced_augmentations(video_file, input_folder, output_folder):
         write_video(output_path, aug_frames, fps, frame_size)
 
 if __name__ == "__main__":
-    input_folder = "D:/Projects/Face-Swap-Detection-Model/Faceforensic/manipulated_sequences/Deepfakes/c40/videos"  # Replace with your input folder
-    output_folder = "D:/augmented_type_7_videos/df_lq"  # Replace with your output folder
+    input_folder = "D:/Projects/Face-Swap-Detection-Model/Faceforensic/manipulated_sequences/NeuralTextures/c40/videos"  # Replace with your input folder
+    output_folder = "D:/augmented_type_7_videos/nt_lq"  # Replace with your output folder
 
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
